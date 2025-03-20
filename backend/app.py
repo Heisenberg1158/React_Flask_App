@@ -4,6 +4,7 @@ from databases.friends_db import Friend
 from routes.friends import friend_page
 from flask_cors import CORS
 import os
+
 # Paths
 frontend_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend"))
 build_folder = os.path.join(frontend_folder, "build")
@@ -15,8 +16,10 @@ app = Flask(
     static_url_path="/static"
 )
 
-CORS(app, origins="*", supports_credentials=True)
+# Enable CORS
+CORS(app, resources={r"/*": {"origins": "*"}})
 
+# Configure database
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///friends.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -26,21 +29,20 @@ db.init_app(app)
 @app.route("/", defaults={"filename": ""})
 @app.route("/<path:filename>")
 def index(filename):
-    if not filename:
-        filename = "index.html"
     file_path = os.path.join(build_folder, filename)
     if os.path.exists(file_path):
         return send_from_directory(build_folder, filename)
-    else:
-        return send_from_directory(build_folder, "index.html")
+    return send_from_directory(build_folder, "index.html"), 200
 
-# Handle 404s for React Router
+# Handle 404 errors (for React Router)
 @app.errorhandler(404)
 def not_found(e):
-    return send_from_directory(build_folder, "index.html")
+    return send_from_directory(build_folder, "index.html"), 200
 
 # Register blueprint
 app.register_blueprint(friend_page, url_prefix="/")
 
+# Run app on Render
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))  # Use PORT from environment variable
+    app.run(host="0.0.0.0", port=port, debug=True)
