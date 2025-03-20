@@ -21,6 +21,8 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Configure database
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///friends.db"
+# Turn off tracking modifications to save memory ....True ->>>	Tracks all changes in real-time, uses extra memory
+#False ->>>	Tracks changes only when session.commit() is called, uses less memory.
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
